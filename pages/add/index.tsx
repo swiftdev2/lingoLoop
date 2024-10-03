@@ -11,7 +11,7 @@ export default function AddPage() {
         </div>
         <div style={{paddingTop: "1rem"}}>
             <AddWordsForm />
-          </div>
+        </div>
       </section>
     </DefaultLayout>
   );

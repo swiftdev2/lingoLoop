@@ -17,16 +17,13 @@ interface TableRow {
 }
 
 export const AddWordsForm = () => {
-    const [english, setEnglish] = useState('');
-    const [translation, setTranslation] = useState('');
-    const [wordGroups, setWordGroups] = useState('');
     const [getWords, setGetWords] = useState<any[]>([]);
     const {isOpen, onOpen, onClose} = useDisclosure();
     const [numOfRows, setNumOfRows] = useState<number>(1);
     const [tableRows, setTableRows] = useState<TableRow[]>([]);
 
     const fetchData = async () => {
-        const response = await fetch('/api/getWords');
+        const response = await fetch('/api/getWords?fullList=true');
         const data = await response.json();
         setGetWords(data);
     };
@@ -88,12 +85,6 @@ export const AddWordsForm = () => {
 
         if (response.ok) {
             const data = await response.json();
-            console.log(data.message);
-            // Optionally reset form fields
-            setEnglish('');
-            setTranslation('');
-            setWordGroups('');
-            fetchData();
         } else {
             console.error('Error adding word');
         }

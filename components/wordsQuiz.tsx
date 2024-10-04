@@ -1,5 +1,19 @@
-import { Card, CardBody, CardFooter, Chip, Divider } from "@nextui-org/react";
-import { useEffect, useState } from "react";
+import type { Selection } from "@nextui-org/react";
+
+import {
+  Button,
+  Card,
+  CardBody,
+  CardFooter,
+  Chip,
+  Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+} from "@nextui-org/react";
+import { IconCheck } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
 
 interface wordsInterface {
   created: string;
@@ -21,21 +35,31 @@ interface incorrectWordsInterface {
 
 export const QuizWords = () => {
   const [getWords, setGetWords] = useState<wordsInterface[]>([]);
+  const [streak, setStreak] = useState<number>(0);
+  const [showAnswer, setShowAnswer] = useState<boolean>(false);
+  const [getGroups, setGetGroups] = useState<string[]>([]);
   const [getIncorrectWords, setIncorrectGetWords] = useState<
     incorrectWordsInterface[]
   >([]);
-  const [streak, setStreak] = useState<number>(0);
   const [currentWord, setCurrentWord] = useState<
     wordsInterface | incorrectWordsInterface
   >();
-  const [showAnswer, setShowAnswer] = useState<boolean>(false);
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
 
   const fetchData = async () => {
-    const response = await fetch("/api/getWords?fullList=false");
+    const response = await fetch("/api/getWords?fullList=false&groups=all");
     const data = await response.json();
 
     setGetWords(data["words"]);
     setIncorrectGetWords(data["incorrectWords"]);
+
+    const responseGroup = await fetch("/api/getGroups");
+    const dataGroup = ["All"];
+    const dataGroup2: string[] = await responseGroup.json();
+    const combinedArray = dataGroup.concat(dataGroup2);
+
+    setGetGroups(combinedArray);
+    setSelectedKeys(new Set([combinedArray[0]]));
   };
 
   useEffect(() => {
@@ -109,6 +133,11 @@ export const QuizWords = () => {
     selectWord();
   };
 
+  const selectedValue = useMemo(
+    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
+    [selectedKeys],
+  );
+
   async function selectWord() {
     if (getWords.length === 0) {
       return null;
@@ -142,6 +171,23 @@ export const QuizWords = () => {
     }
   }
 
+  async function updateWords() {
+    const dropdownValues = selectedKeys;
+    const group = dropdownValues ? Array.from(dropdownValues).join(", ") : "";
+
+    console.log(group);
+
+    const response = await fetch(
+      `/api/getWords?fullList=false&groups=${group}`,
+    );
+    const data = await response.json();
+
+    setGetWords(data["words"]);
+    setIncorrectGetWords(data["incorrectWords"]);
+  }
+
+  console.log("getWords", getWords);
+
   function isWordsInterface(
     word: wordsInterface | incorrectWordsInterface,
   ): word is wordsInterface {
@@ -154,11 +200,50 @@ export const QuizWords = () => {
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
+          alignItems: "center", // Centers items vertically within the div
           width: "100%",
+          padding: "0 16px", // Optional: add some padding for aesthetics
         }}
       >
-        <Chip color="warning">Streak: {streak}</Chip>
+        <div>
+          <p>Select groups to test on</p>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button className="capitalize" variant="bordered">
+                  {selectedValue}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                aria-label="Multiple selection example"
+                closeOnSelect={false}
+                selectedKeys={selectedKeys}
+                selectionMode="multiple"
+                variant="flat"
+                onSelectionChange={setSelectedKeys}
+              >
+                {getGroups.map((group) => (
+                  <DropdownItem key={group}>{group}</DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+            {/* <Button style={{ marginLeft: "8px" }}>Action</Button> */}
+            <Button
+              isIconOnly
+              color="success"
+              style={{ marginLeft: "0.5rem" }}
+              variant="flat"
+              onClick={updateWords}
+            >
+              <IconCheck />
+            </Button>
+          </div>
+        </div>
+        <div>
+          <Chip color="warning">Streak: {streak}</Chip> {/* Right Component */}
+        </div>
       </div>
       {currentWord && (
         <Card

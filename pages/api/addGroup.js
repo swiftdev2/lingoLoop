@@ -14,17 +14,15 @@ export default async function handler(req, res) {
     });
 
     try {
-      for (const { englishWord, translation, group } of inputValues) {
-        // Insert each item into the database
-        await connection.execute(
-          "INSERT INTO words (english, translation, wordGroups, created) VALUES (?, ?, ?, CURDATE())",
-          [englishWord, translation, group],
-        );
-      }
+      inputValues.map(async (item) => {
+        await connection.execute("INSERT INTO groupsList (name) VALUES (?)", [
+          item,
+        ]);
+      });
 
-      const [rows] = await connection.execute("SELECT * FROM words");
+      const [groups] = await connection.execute("SELECT * FROM groupsList");
 
-      res.status(200).json(rows);
+      res.status(200).json(groups);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error adding word to the database." });

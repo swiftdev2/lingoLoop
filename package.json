@@ -27,11 +27,13 @@
 		"formik": "^2.4.6",
 		"framer-motion": "~11.1.1",
 		"intl-messageformat": "^10.5.0",
+		"multiselect-react-dropdown": "^2.0.25",
 		"mysql2": "^3.11.3",
 		"next": "14.2.4",
 		"next-themes": "^0.2.1",
 		"react": "18.3.1",
-		"react-dom": "18.3.1"
+		"react-dom": "18.3.1",
+		"react-select": "^5.8.1"
 	},
 	"devDependencies": {
 		"@types/node": "20.5.7",

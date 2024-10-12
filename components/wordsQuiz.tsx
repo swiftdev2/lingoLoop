@@ -38,6 +38,7 @@ export const QuizWords = () => {
   const [streak, setStreak] = useState<number>(0);
   const [showAnswer, setShowAnswer] = useState<boolean>(false);
   const [getGroups, setGetGroups] = useState<string[]>([]);
+  const [showingSubsetGroup, setShowingSubsetGroup] = useState(false);
   const [getIncorrectWords, setIncorrectGetWords] = useState<
     incorrectWordsInterface[]
   >([]);
@@ -61,6 +62,8 @@ export const QuizWords = () => {
     setGetGroups(combinedArray);
     setSelectedKeys(new Set([combinedArray[0]]));
   };
+
+  console.log("getWords", getWords);
 
   useEffect(() => {
     fetchData();
@@ -112,23 +115,25 @@ export const QuizWords = () => {
   const handleWrongAnswer = async () => {
     setStreak(0);
     setShowAnswer(false);
-    if (isWordsInterface(currentWord!)) {
-      // add to incorrect word list
-      const response = await fetch(
-        `/api/addIncorrectWord?id=${currentWord.id}`,
-      );
-      const data = await response.json();
+    if (showingSubsetGroup === false) {
+      if (isWordsInterface(currentWord!)) {
+        // add to incorrect word list
+        const response = await fetch(
+          `/api/addIncorrectWord?id=${currentWord.id}`,
+        );
+        const data = await response.json();
 
-      setIncorrectGetWords(data);
-    } else {
-      // increment incorrect word list
-      const countPlus = currentWord!.count + 1;
-      const response = await fetch(
-        `/api/incrementIncorrectWord?id=${currentWord!.id}&count=0`,
-      );
-      const data = await response.json();
+        setIncorrectGetWords(data);
+      } else {
+        // increment incorrect word list
+        const countPlus = currentWord!.count + 1;
+        const response = await fetch(
+          `/api/incrementIncorrectWord?id=${currentWord!.id}&count=0`,
+        );
+        const data = await response.json();
 
-      setIncorrectGetWords(data);
+        setIncorrectGetWords(data);
+      }
     }
     selectWord();
   };
@@ -142,8 +147,7 @@ export const QuizWords = () => {
     if (getWords.length === 0) {
       return null;
     } else {
-      // Pick from incorrect word list?
-      if (streak > 14 && streak % 15 == 0) {
+      if (streak > 14 && streak % 15 == 0 && showingSubsetGroup === false) {
         console.log("wowstreak");
         const response = await fetch("/api/streakShow");
         const data = await response.json();
@@ -153,7 +157,12 @@ export const QuizWords = () => {
 
       const chanceOfFour = Math.floor(Math.random() * 4);
 
-      if (chanceOfFour === 1) {
+      // only pick from incorrect word list if there is anything in that list and not in subset group
+      if (
+        getIncorrectWords.length > 0 &&
+        showingSubsetGroup === false &&
+        chanceOfFour === 1
+      ) {
         const randomIndex = Math.floor(
           Math.random() * getIncorrectWords.length,
         );
@@ -168,6 +177,9 @@ export const QuizWords = () => {
         setCurrentWord(selectedWord);
         console.log("selectedWord", selectedWord);
       }
+      const chanceOfTwo = Math.floor(Math.random() * 2);
+
+      setShowAnswer(chanceOfTwo == 1 ? true : false);
     }
   }
 
@@ -175,7 +187,8 @@ export const QuizWords = () => {
     const dropdownValues = selectedKeys;
     const group = dropdownValues ? Array.from(dropdownValues).join(", ") : "";
 
-    console.log(group);
+    console.log("group", group);
+    setShowingSubsetGroup(group.includes("All") ? false : true);
 
     const response = await fetch(
       `/api/getWords?fullList=false&groups=${group}`,
@@ -185,8 +198,6 @@ export const QuizWords = () => {
     setGetWords(data["words"]);
     setIncorrectGetWords(data["incorrectWords"]);
   }
-
-  console.log("getWords", getWords);
 
   function isWordsInterface(
     word: wordsInterface | incorrectWordsInterface,
@@ -201,9 +212,9 @@ export const QuizWords = () => {
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center", // Centers items vertically within the div
+          alignItems: "center",
           width: "100%",
-          padding: "0 16px", // Optional: add some padding for aesthetics
+          padding: "0 16px",
         }}
       >
         <div>
@@ -229,7 +240,7 @@ export const QuizWords = () => {
                 ))}
               </DropdownMenu>
             </Dropdown>
-            {/* <Button style={{ marginLeft: "8px" }}>Action</Button> */}
+
             <Button
               isIconOnly
               color="success"
@@ -242,7 +253,13 @@ export const QuizWords = () => {
           </div>
         </div>
         <div>
-          <Chip color="warning">Streak: {streak}</Chip> {/* Right Component */}
+          <Chip color="warning">Streak: {streak}</Chip>
+          {/* <Chip color="secondary" style={{ marginLeft: "0.5rem" }}>
+            Words testing on: {getWords.length}
+          </Chip> */}
+          <Chip color="secondary" style={{ marginLeft: "0.5rem" }}>
+            Incorrect words: {getIncorrectWords.length}
+          </Chip>
         </div>
       </div>
       {currentWord && (
@@ -301,7 +318,7 @@ export const QuizWords = () => {
           onPress={handleWrongAnswer}
         >
           <CardBody style={{ fontSize: "2rem", alignItems: "center" }}>
-            wrong
+            Wrong
           </CardBody>
         </Card>
       </div>

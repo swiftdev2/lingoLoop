@@ -16,7 +16,11 @@ export default async function handler(req, res) {
       );
 
       if (rows.length === 0) {
-        return res.status(200).json({ message: "No words to update." });
+        const [rows] = await connection.execute(
+          "SELECT * FROM words WHERE shown=TRUE",
+        );
+
+        res.status(200).json(rowsUpdated);
       }
 
       // Get the IDs of the first 5 rows

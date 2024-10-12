@@ -31,9 +31,10 @@ export default async function handler(req, res) {
           incorrectWords: incorrectRows,
         });
       } else {
-        const groupsArray = groups.split(",").map((group) => group.trim());
+        const groupsArray = groups
+          .split(",")
+          .map((group) => group.trim().toLowerCase());
 
-        console.log("groupsArray", groupsArray);
         // Construct the SQL query
         const sql = "SELECT * FROM words";
         const [rows] = await connection.execute(sql);
@@ -41,7 +42,7 @@ export default async function handler(req, res) {
           // Split the wordGroups into an array and trim whitespace
           const wordGroupsArray = row.wordGroups
             .split(",")
-            .map((group) => group.trim());
+            .map((group) => group.trim().toLowerCase());
 
           return wordGroupsArray.some((wordGroup) =>
             groupsArray.includes(wordGroup.toLowerCase()),

@@ -235,9 +235,11 @@ export const QuizWords = () => {
                 variant="flat"
                 onSelectionChange={setSelectedKeys}
               >
-                {getGroups.map((group) => (
-                  <DropdownItem key={group}>{group}</DropdownItem>
-                ))}
+                {getGroups
+                  .sort((a, b) => a.localeCompare(b))
+                  .map((group) => (
+                    <DropdownItem key={group}>{group}</DropdownItem>
+                  ))}
               </DropdownMenu>
             </Dropdown>
 

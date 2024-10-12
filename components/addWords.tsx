@@ -127,7 +127,6 @@ export const AddWordsForm = () => {
         group,
       });
     }
-    // console.log(selectedKeys);
     handleSubmitWords(inputValues);
   };
 
@@ -345,9 +344,11 @@ export const AddWordsForm = () => {
                             )
                           }
                         >
-                          {getGroups.map((group) => (
-                            <DropdownItem key={group}>{group}</DropdownItem>
-                          ))}
+                          {getGroups
+                            .sort((a, b) => a.localeCompare(b))
+                            .map((group) => (
+                              <DropdownItem key={group}>{group}</DropdownItem>
+                            ))}
                         </DropdownMenu>
                       </Dropdown>
                     </div>

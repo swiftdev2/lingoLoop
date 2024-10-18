@@ -19,9 +19,11 @@ import {
   DropdownTrigger,
   DropdownItem,
   Dropdown,
+  Tooltip,
 } from "@nextui-org/react";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPlus, IconTrash } from "@tabler/icons-react";
 import React from "react";
+import Cookies from "js-cookie";
 
 interface InputValue {
   englishWord: string;
@@ -40,7 +42,7 @@ export const AddWordsForm = () => {
   const [getWords, setGetWords] = useState<any[]>([]);
   const [getGroups, setGetGroups] = useState<string[]>([]);
   const [numOfRows, setNumOfRows] = useState<number>(1);
-  const [tableRows, setTableRows] = useState<TableRow[]>([]);
+  const [incompleteForm, setIncompleteForm] = useState(false);
   const {
     isOpen: isOpenWords,
     onOpen: onOpenWords,
@@ -56,12 +58,27 @@ export const AddWordsForm = () => {
   }>({});
 
   const fetchData = async () => {
-    const responseWords = await fetch("/api/getWords?fullList=true&groups=all");
+    // const responseWords = await fetch("/api/getWords?fullList=true&groups=all");
+    const responseWords = await fetch(
+      "/api/getWords?fullList=true&groups=all",
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      },
+    );
     const dataWords = await responseWords.json();
 
     setGetWords(dataWords);
 
-    const responseGroup = await fetch("/api/getGroups");
+    const responseGroup = await fetch("/api/getGroups", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Cookies.get("token")}`,
+      },
+    });
+
     const dataGroup = await responseGroup.json();
 
     setGetGroups(dataGroup);
@@ -72,16 +89,8 @@ export const AddWordsForm = () => {
   }, []);
 
   useEffect(() => {
-    setTableRows([]);
-    const newRows = getWords.map((item) => ({
-      key: item.id as number,
-      word: item.english as string,
-      translation: item.translation as string,
-      wordGroups: item.wordGroups as string[],
-    }));
-
-    setTableRows((prevRows) => [...prevRows, ...newRows]);
-  }, [getWords]);
+    requiredWordFieldsNotComplete();
+  }, [numOfRows]);
 
   const handleOpenNewWord = () => {
     setNumOfRows(1);
@@ -103,6 +112,25 @@ export const AddWordsForm = () => {
       ...prevSelected,
       [dropdownId]: keys,
     }));
+  };
+
+  const handleDeleteWord = async (deleteId: number, word: string) => {
+    console.log(deleteId);
+    const response = await fetch(`/api/deleteWord?id=${deleteId}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${Cookies.get("token")}`,
+      },
+    });
+
+    if (response.ok) {
+      alert(`Word: ${word} deleted successfully`);
+      const dataWords = await response.json();
+
+      setGetWords(dataWords);
+    } else {
+      alert(`An unknow error occured, word: ${word} deleted unsuccessfully`);
+    }
   };
 
   const handleAddWords = () => {
@@ -147,11 +175,50 @@ export const AddWordsForm = () => {
     handleSubmitGroups(inputValues);
   };
 
+  const requiredWordFieldsNotComplete = () => {
+    for (let index = 0; index < numOfRows; index++) {
+      if (
+        (document.getElementById(`eng-${index}`) as HTMLInputElement)?.value ===
+        ""
+      ) {
+        setIncompleteForm(true);
+
+        return;
+      }
+      if (
+        (document.getElementById(`translation-${index}`) as HTMLInputElement)
+          ?.value === ""
+      ) {
+        setIncompleteForm(true);
+
+        return;
+      }
+    }
+    setIncompleteForm(false);
+  };
+
+  const requiredGroupFieldsNotComplete = () => {
+    console.log("wowza");
+    for (let index = 0; index < numOfRows; index++) {
+      if (
+        (document.getElementById(`group-${index}`) as HTMLInputElement)
+          ?.value === ""
+      ) {
+        setIncompleteForm(true);
+
+        return;
+      }
+    }
+    console.log("goteer");
+    setIncompleteForm(false);
+  };
+
   const handleSubmitWords = async (inputValues: InputValue[]) => {
     const response = await fetch("/api/add", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${Cookies.get("token")}`,
       },
       body: JSON.stringify(inputValues),
     });
@@ -170,6 +237,7 @@ export const AddWordsForm = () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${Cookies.get("token")}`,
       },
       body: JSON.stringify(inputValues),
     });
@@ -185,7 +253,7 @@ export const AddWordsForm = () => {
 
   const columns = [
     {
-      key: "word",
+      key: "english",
       label: "WORD",
     },
     {
@@ -196,26 +264,20 @@ export const AddWordsForm = () => {
       key: "wordGroups",
       label: "WORDGROUPS",
     },
+    {
+      key: "shown",
+      label: "in word list?",
+    },
+    {
+      key: "actions",
+      label: "actions",
+    },
   ];
 
   const topContent = React.useMemo(() => {
     return (
       <div className="flex flex-col gap-4">
         <div className="flex justify-between gap-3 items-end">
-          {/* <Input
-                isClearable
-                classNames={{
-                  base: "w-full sm:max-w-[44%]",
-                  inputWrapper: "border-1",
-                }}
-                placeholder="Search by name..."
-                size="sm"
-                startContent={<SearchIcon className="text-default-300" />}
-                value={filterValue}
-                variant="bordered"
-                onClear={() => setFilterValue("")}
-                onValueChange={onSearchChange}
-              /> */}
           <div className="flex gap-3">
             <Button
               className="bg-foreground text-background"
@@ -246,6 +308,9 @@ export const AddWordsForm = () => {
     );
   }, [getWords]);
 
+  console.log("getWords", getWords);
+  console.log("getGroups", getGroups);
+
   return (
     <>
       <Table
@@ -256,12 +321,26 @@ export const AddWordsForm = () => {
           {(column) => (
             <TableColumn key={column.key}>{column.label}</TableColumn>
           )}
+          {/* <TableColumn key="actions">Actions</TableColumn> */}
         </TableHeader>
-        <TableBody items={tableRows}>
+        <TableBody items={getWords}>
           {(item) => (
             <TableRow key={item.key}>
               {(columnKey) => (
-                <TableCell>{getKeyValue(item, columnKey)}</TableCell>
+                <TableCell key={`${item.key}-${columnKey}`}>
+                  {columnKey === "actions" ? (
+                    <Button
+                      isIconOnly
+                      color="danger"
+                      size="sm"
+                      onPress={() => handleDeleteWord(item.id, item.english)}
+                    >
+                      <IconTrash style={{ maxHeight: "1.5rem" }} />
+                    </Button>
+                  ) : (
+                    getKeyValue(item, columnKey) // Display static value
+                  )}
+                </TableCell>
               )}
             </TableRow>
           )}
@@ -296,31 +375,19 @@ export const AddWordsForm = () => {
                         autoFocus
                         id={`eng-${index}`}
                         label="English Word"
-                        //   placeholder="Enter the word in english"
                         variant="bordered"
+                        onBlur={requiredWordFieldsNotComplete}
                       />
                       <Input
                         id={`translation-${index}`}
                         label="Translation"
-                        //   placeholder="Enter the word in arabic"
                         variant="bordered"
+                        onBlur={requiredWordFieldsNotComplete}
+                        onChange={requiredWordFieldsNotComplete}
                       />
-                      {/* <Input
-                      id={`group-${index}`}
-                      label="Group"
-                      //   placeholder="Specify a group to associate with"
-                      variant="bordered"
-                    /> */}
-                      {/* <Autocomplete className="max-w-xs" label="Select a Group">
-                      {getGroups.map((group) => (
-                        <AutocompleteItem key={group} value={group}>
-                          {group}
-                        </AutocompleteItem>
-                      ))}
-                    </Autocomplete> */}
 
                       <Dropdown>
-                        <DropdownTrigger className="min-w-[200px]">
+                        <DropdownTrigger className="min-w-[13rem] min-h-[3.5rem]">
                           <Button className="capitalize" variant="bordered">
                             {selectedKeys[dropdownId]
                               ? Array.from(selectedKeys[dropdownId])
@@ -330,9 +397,9 @@ export const AddWordsForm = () => {
                           </Button>
                         </DropdownTrigger>
                         <DropdownMenu
-                          disallowEmptySelection
+                          // disallowEmptySelection
                           aria-label={`Multiple selection for Dropdown ${index + 1}`}
-                          className="min-w-[600px]"
+                          // className="min-w-[3rem]"
                           closeOnSelect={false}
                           selectedKeys={selectedKeys[dropdownId]}
                           selectionMode="multiple"
@@ -361,27 +428,37 @@ export const AddWordsForm = () => {
                     color="primary"
                     onPress={() => setNumOfRows((prev: number) => prev + 1)}
                   >
-                    Add new word
+                    Add another word
                   </Button>
-                  <Button
-                    color="danger"
-                    onPress={() =>
-                      setNumOfRows((prev: number) =>
-                        prev > 1 ? prev - 1 : prev,
-                      )
-                    }
-                  >
-                    Delete last row
-                  </Button>
+                  {numOfRows > 1 && (
+                    <Button
+                      color="danger"
+                      onPress={() => setNumOfRows((prev: number) => prev - 1)}
+                    >
+                      Delete last word
+                    </Button>
+                  )}
                 </div>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onCloseWords}>
-                  Close
+                  Discard
                 </Button>
-                <Button color="primary" onPress={handleAddWords}>
-                  Add
-                </Button>
+
+                <Tooltip
+                  content="Please ensure all words and their translations have been entered"
+                  isDisabled={!incompleteForm}
+                >
+                  <span>
+                    <Button
+                      color="primary"
+                      isDisabled={incompleteForm}
+                      onPress={handleAddWords}
+                    >
+                      Save
+                    </Button>
+                  </span>
+                </Tooltip>
               </ModalFooter>
             </>
           )}
@@ -414,6 +491,7 @@ export const AddWordsForm = () => {
                       id={`group-${index}`}
                       label="Group Name"
                       variant="bordered"
+                      onBlur={requiredGroupFieldsNotComplete}
                     />
                   </div>
                 ))}
@@ -424,27 +502,36 @@ export const AddWordsForm = () => {
                     color="primary"
                     onPress={() => setNumOfRows((prev: number) => prev + 1)}
                   >
-                    Add new Group
+                    Add another Group
                   </Button>
-                  <Button
-                    color="danger"
-                    onPress={() =>
-                      setNumOfRows((prev: number) =>
-                        prev > 1 ? prev - 1 : prev,
-                      )
-                    }
-                  >
-                    Delete last row
-                  </Button>
+                  {numOfRows > 1 && (
+                    <Button
+                      color="danger"
+                      onPress={() => setNumOfRows((prev: number) => prev - 1)}
+                    >
+                      Delete last group
+                    </Button>
+                  )}
                 </div>
               </ModalBody>
               <ModalFooter>
                 <Button color="danger" variant="light" onPress={onClose}>
-                  Close
+                  Discard
                 </Button>
-                <Button color="primary" onPress={handleAddGroups}>
-                  Add
-                </Button>
+                <Tooltip
+                  content="Please ensure all words and their translations have been entered"
+                  isDisabled={!incompleteForm}
+                >
+                  <span>
+                    <Button
+                      color="primary"
+                      isDisabled={incompleteForm}
+                      onPress={handleAddGroups}
+                    >
+                      Save
+                    </Button>
+                  </span>
+                </Tooltip>
               </ModalFooter>
             </>
           )}

@@ -24,34 +24,27 @@ export default async function handler(req, res) {
       const { userId } = validateResponse;
 
       const { id } = req.query;
-      const { count } = req.query;
 
-      if (count === "3") {
-        // remove from list
-        connection.execute(
-          "DELETE FROM incorrectWords WHERE id = ? AND userId = ?",
-          [id, userId],
-        );
-      } else {
-        const updateQuery = `UPDATE incorrectWords SET count = ${count} WHERE id = ${id}`;
+      connection.execute("DELETE FROM words WHERE id = ? AND userId = ?", [
+        id,
+        userId,
+      ]);
 
-        await connection.execute(updateQuery);
-        // update counter
-      }
+      const [rows] = await connection.execute("SELECT * FROM words");
 
-      const [incorrectRows] = await connection.execute(
-        "SELECT * FROM incorrectWords WHERE userId = ?",
-        [userId],
-      );
+      // convert the 1/0 to true/false
+      const transformedRows = rows.map((row) => ({
+        ...row,
+        shown: row.shown == 1 ? "Yes" : "No",
+      }));
 
-      res.status(200).json(incorrectRows);
+      res.status(200).json(transformedRows);
       await connection.end();
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Database error" });
     }
   } else {
-    // If not a GET request, return method not allowed
     res.setHeader("Allow", ["GET"]);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }

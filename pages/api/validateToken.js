@@ -1,15 +1,17 @@
 import { OAuth2Client } from "google-auth-library";
-import mysql from "mysql2/promise";
+import { Pool } from "pg";
 
 const client = new OAuth2Client(process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID); // Your Google Client ID here
 
 export default async function validateToken(req, res) {
   const authHeader = req.headers.authorization;
-  const connection = await mysql.createConnection({
+
+  const pool = new Pool({
     host: "host.docker.internal",
-    user: "root",
+    user: "postgres",
     password: "password",
     database: "lingoLoop",
+    port: 5432,
   });
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -32,17 +34,17 @@ export default async function validateToken(req, res) {
     const userEmail = payload?.name;
 
     // If new user: Add user to database
-    const [existingUser] = await connection.execute(
-      `SELECT * FROM users WHERE googleId=${userId}`,
+    const { rows: existingUser } = await pool.query(
+      "SELECT * FROM users WHERE googleid = $1",
+      [userId],
     );
 
     if (existingUser.length === 0) {
-      await connection.execute(
-        "INSERT INTO users (googleId, name, email) VALUES (?, ?, ?)",
+      await pool.query(
+        "INSERT INTO users (googleid, name, email) VALUES ($1, $2, $3)",
         [userId, userName, userEmail],
       );
     }
-    await connection.end();
 
     res.status(200).json({ valid: true, userId: userId, name: userName });
   } catch (error) {

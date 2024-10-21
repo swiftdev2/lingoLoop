@@ -1,18 +1,24 @@
 // pages/api/addWord.js
-import mysql from "mysql2/promise";
+import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
 import { validateToken } from "../../utils/validateToken";
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY,
+    );
+
     const inputValues = req.body;
 
-    // Create a connection to the MySQL database
-    const connection = await mysql.createConnection({
+    const pool = new Pool({
       host: "host.docker.internal",
-      user: "root",
+      user: "postgres",
       password: "password",
       database: "lingoLoop",
+      port: 5432,
     });
 
     const validateResponse = await validateToken(req);
@@ -26,28 +32,47 @@ export default async function handler(req, res) {
 
     try {
       for (const { englishWord, translation, group } of inputValues) {
-        // Insert each item into the database
-        await connection.execute(
-          "INSERT INTO words (english, translation, wordGroups, created, userId) VALUES (?, ?, ?, CURDATE(), ?)",
+        await pool.query(
+          "INSERT INTO words (english, translation, wordgroups, created, userid) VALUES ($1, $2, $3, CURRENT_DATE, $4)",
           [englishWord, translation, group, userId],
         );
+
+        // const { error } = await supabase.from("words").insert({
+        //   english: englishWord,
+        //   translation: translation,
+        //   wordgroups: group,
+        //   created: new Date(),
+        //   userid: userId,
+        // });
+
+        // if (error) {
+        //   throw error; // Throw the error to handle it in the catch block
+        // }
       }
 
-      const [rows] = await connection.execute(
-        "SELECT * FROM words WHERE userId = ?",
+      const { rows } = await pool.query(
+        "SELECT * FROM words WHERE userid = $1",
         [userId],
       );
+
+      // const { data: rows, error: fetchError } = await supabase
+      //   .from("words")
+      //   .select("*")
+      //   .eq("userid", userId);
+
+      // if (fetchError) {
+      //   throw fetchError;
+      // }
+
       const transformedRows = rows.map((row) => ({
         ...row,
-        shown: row.shown == 1 ? "Yes" : "No", // Convert 1 to "true" and 0 to "false"
+        shown: row.shown == true ? "Yes" : "No", // Convert 1 to "true" and 0 to "false"
       }));
 
       res.status(200).json(transformedRows);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Error adding word to the database." });
-    } finally {
-      await connection.end(); // Close the database connection
     }
   } else {
     res.setHeader("Allow", ["POST"]);

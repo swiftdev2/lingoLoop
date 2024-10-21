@@ -1,16 +1,16 @@
-import mysql from "mysql2/promise";
+import { Pool } from "pg";
 
 import { validateToken } from "../../utils/validateToken";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
-      // Create a connection to the MySQL database
-      const connection = await mysql.createConnection({
+      const pool = new Pool({
         host: "host.docker.internal",
-        user: "root",
+        user: "postgres",
         password: "password",
         database: "lingoLoop",
+        port: 5432,
       });
 
       // validate user
@@ -28,24 +28,36 @@ export default async function handler(req, res) {
 
       if (count === "3") {
         // remove from list
-        connection.execute(
-          "DELETE FROM incorrectWords WHERE id = ? AND userId = ?",
+        // connection.execute(
+        //   "DELETE FROM incorrectWords WHERE id = ? AND userId = ?",
+        //   [id, userId],
+        // );
+        await pool.query(
+          "DELETE FROM incorrectwords WHERE id = $1 AND userid = $2",
           [id, userId],
         );
       } else {
-        const updateQuery = `UPDATE incorrectWords SET count = ${count} WHERE id = ${id}`;
+        // const updateQuery = `UPDATE incorrectWords SET count = ${count} WHERE id = ${id}`;
+        // await connection.execute(updateQuery);
 
-        await connection.execute(updateQuery);
+        const updateQuery = `UPDATE incorrectwords SET count = $1 WHERE id = $2`;
+
+        await pool.query(updateQuery, [count, id]);
         // update counter
       }
 
-      const [incorrectRows] = await connection.execute(
-        "SELECT * FROM incorrectWords WHERE userId = ?",
+      // const [incorrectRows] = await connection.execute(
+      //   "SELECT * FROM incorrectWords WHERE userId = ?",
+      //   [userId],
+      // );
+
+      const { rows: incorrectRows } = await pool.query(
+        "SELECT * FROM incorrectwords WHERE userid = $1",
         [userId],
       );
 
       res.status(200).json(incorrectRows);
-      await connection.end();
+      // await connection.end();
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Database error" });

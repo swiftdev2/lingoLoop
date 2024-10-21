@@ -1,15 +1,15 @@
-import mysql from "mysql2/promise";
+import { Pool } from "pg";
 
 import { validateToken } from "../../utils/validateToken";
 
 export default async function handler(req, res) {
   try {
-    // Create a connection to the MySQL database
-    const connection = await mysql.createConnection({
+    const pool = new Pool({
       host: "host.docker.internal",
-      user: "root",
+      user: "postgres",
       password: "password",
       database: "lingoLoop",
+      port: 5432,
     });
 
     // validate user
@@ -21,19 +21,14 @@ export default async function handler(req, res) {
       });
     }
     const { userId } = validateResponse;
-
-    await connection.connect();
-
     const { fullList } = req.query;
     const { groups } = req.query;
 
     if (fullList == "true") {
-      // const [rows] = await connection.execute("SELECT * FROM words");
-      const [rows] = await connection.execute(
-        "SELECT * FROM words WHERE userId = ?",
+      const { rows } = await pool.query(
+        "SELECT * FROM words WHERE userid = $1",
         [userId],
       );
-
       // convert the 1/0 to true/false
       const transformedRows = rows.map((row) => ({
         ...row,
@@ -42,20 +37,53 @@ export default async function handler(req, res) {
 
       res.status(200).json(transformedRows);
     } else {
+      const result = await pool.query(
+        "SELECT * FROM incorrectwords WHERE userid = $1",
+        [userId],
+      );
+      const incorrectRows = result.rows;
+
       if (groups.toLowerCase().includes("all")) {
-        const [rows] = await connection.execute(
-          "SELECT * FROM words WHERE userId = ?",
+        const { rows: fullRows } = await pool.query(
+          "SELECT * FROM words WHERE shown = false AND userid = $1 LIMIT 5",
           [userId],
         );
-        const [incorrectRows] = await connection.execute(
-          "SELECT * FROM incorrectWords WHERE userId = ?",
+
+        const { rows } = await pool.query(
+          "SELECT * FROM words WHERE userid = $1 AND shown=true",
           [userId],
         );
+
+        // if length is 0 then figure out if any left to show
+        if (rows.length === 0 && fullRows.length !== 0) {
+          const wordIds = fullRows.map((row) => row.id);
+          const placeholders = wordIds
+            .map((_, index) => `$${index + 1}`)
+            .join(", ");
+          const updateQuery = `UPDATE words SET shown = true WHERE id IN (${placeholders})`;
+
+          await pool.query(updateQuery, wordIds);
+
+          const { rows: rowsUpdated } = await pool.query(
+            "SELECT * FROM words WHERE userid = $1 AND shown=true",
+            [userId],
+          );
+
+          res.status(200).json({
+            words: rowsUpdated,
+            incorrectWords: incorrectRows === undefined ? [] : incorrectRows,
+          });
+        }
+
+        res.status(200).json({
+          words: rows,
+          incorrectWords: incorrectRows === undefined ? [] : incorrectRows,
+        });
 
         rows.length !== 0
           ? res.status(200).json({
               words: rows,
-              incorrectWords: incorrectRows,
+              incorrectWords: incorrectRows === undefined ? [] : incorrectRows,
             })
           : res.status(500).json({
               error: "No words found - please add some using the Add page",
@@ -65,17 +93,15 @@ export default async function handler(req, res) {
           .split(",")
           .map((group) => group.trim().toLowerCase());
 
-        // Construct the SQL query
-        // const sql = "SELECT * FROM words";
-        // const [rows] = await connection.execute(sql);
-
-        const [rows] = await connection.execute(
-          "SELECT * FROM words WHERE userId = ?",
+        const { rows } = await pool.query(
+          "SELECT * FROM words WHERE userid = $1",
           [userId],
         );
+
         const filteredResults = rows.filter((row) => {
           // Split the wordGroups into an array and trim whitespace
-          const wordGroupsArray = row.wordGroups
+
+          const wordGroupsArray = row.wordgroups
             .split(",")
             .map((group) => group.trim().toLowerCase());
 
@@ -84,24 +110,16 @@ export default async function handler(req, res) {
           );
         });
 
-        const [incorrectRows] = await connection.execute(
-          "SELECT * FROM incorrectWords WHERE userId = ?",
-          [userId],
-        );
-
         filteredResults.length !== 0
           ? res.status(200).json({
               words: filteredResults,
-              incorrectWords: incorrectRows,
+              incorrectWords: incorrectRows === undefined ? [] : incorrectRows,
             })
           : res.status(500).json({
               error: "No words found for the specified filters",
             });
       }
     }
-    await connection.end();
-
-    await new Promise((r) => setTimeout(r, 2000));
   } catch (error) {
     console.error(error);
 

@@ -1,16 +1,16 @@
-import mysql from "mysql2/promise";
+import { Pool } from "pg";
 
 import { validateToken } from "../../utils/validateToken";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
-      // Create a connection to the MySQL database
-      const connection = await mysql.createConnection({
+      const pool = new Pool({
         host: "host.docker.internal",
-        user: "root",
+        user: "postgres",
         password: "password",
         database: "lingoLoop",
+        port: 5432,
       });
 
       // validate user
@@ -25,12 +25,15 @@ export default async function handler(req, res) {
 
       const { id } = req.query;
 
-      connection.execute("DELETE FROM words WHERE id = ? AND userId = ?", [
+      await pool.query("DELETE FROM words WHERE id = $1 AND userid = $2", [
         id,
         userId,
       ]);
 
-      const [rows] = await connection.execute("SELECT * FROM words");
+      const { rows } = await pool.query(
+        "SELECT * FROM words WHERE userid = $1",
+        [userId],
+      );
 
       // convert the 1/0 to true/false
       const transformedRows = rows.map((row) => ({
@@ -39,7 +42,6 @@ export default async function handler(req, res) {
       }));
 
       res.status(200).json(transformedRows);
-      await connection.end();
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Database error" });

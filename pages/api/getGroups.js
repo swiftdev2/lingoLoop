@@ -1,15 +1,16 @@
-import mysql from "mysql2/promise";
+import { Pool } from "pg";
 
 import { validateToken } from "../../utils/validateToken";
 
 export default async function handler(req, res) {
   try {
     // Create a connection to the MySQL database
-    const connection = await mysql.createConnection({
+    const pool = new Pool({
       host: "host.docker.internal",
-      user: "root",
+      user: "postgres",
       password: "password",
       database: "lingoLoop",
+      port: 5432,
     });
 
     // validate user
@@ -22,17 +23,13 @@ export default async function handler(req, res) {
     }
     const { userId } = validateResponse;
 
-    await connection.connect();
-
-    const [groups] = await connection.execute(
-      "SELECT name FROM groupsList WHERE userId = ?",
+    const { rows: groups } = await pool.query(
+      "SELECT name FROM groupslist WHERE userId = $1",
       [userId],
     );
     const groupNames = groups.map((group) => group.name);
 
     res.status(200).json(groupNames);
-
-    await connection.end();
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Database error" });

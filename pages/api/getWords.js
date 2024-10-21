@@ -1,9 +1,15 @@
 import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
 import { validateToken } from "../../utils/validateToken";
 
 export default async function handler(req, res) {
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY,
+    );
+
     const pool = new Pool({
       host: "host.docker.internal",
       user: "postgres",
@@ -24,11 +30,20 @@ export default async function handler(req, res) {
     const { fullList } = req.query;
     const { groups } = req.query;
 
+    // just get all users words, no filters
     if (fullList == "true") {
-      const { rows } = await pool.query(
-        "SELECT * FROM words WHERE userid = $1",
-        [userId],
-      );
+      // const { rows } = await pool.query(
+      //   "SELECT * FROM words WHERE userid = $1",
+      //   [userId],
+      // );
+      const { data: rows, error: fetchError } = await supabase
+        .from("words")
+        .select("*")
+        .eq("userid", userId);
+
+      if (fetchError) {
+        throw fetchError;
+      }
       // convert the 1/0 to true/false
       const transformedRows = rows.map((row) => ({
         ...row,
@@ -37,37 +52,76 @@ export default async function handler(req, res) {
 
       res.status(200).json(transformedRows);
     } else {
-      const result = await pool.query(
-        "SELECT * FROM incorrectwords WHERE userid = $1",
-        [userId],
-      );
-      const incorrectRows = result.rows;
+      // select incorrect words so we can return them to quiz
+      // const result = await pool.query(
+      //   "SELECT * FROM incorrectwords WHERE userid = $1",
+      //   [userId],
+      // );
+      // const incorrectRows = result.rows;
+
+      const { data: incorrectRows, error: fetchError } = await supabase
+        .from("incorrectwords")
+        .select("*")
+        .eq("userid", userId);
+
+      if (fetchError) {
+        throw fetchError;
+      }
 
       if (groups.toLowerCase().includes("all")) {
-        const { rows: fullRows } = await pool.query(
-          "SELECT * FROM words WHERE shown = false AND userid = $1 LIMIT 5",
-          [userId],
-        );
+        // find number of users words where shown is false
 
-        const { rows } = await pool.query(
-          "SELECT * FROM words WHERE userid = $1 AND shown=true",
-          [userId],
-        );
+        // const { rows: fullRows } = await pool.query(
+        //   "SELECT * FROM words WHERE shown = false AND userid = $1 LIMIT 5",
+        //   [userId],
+        // );
+        const { data: fullRows } = await supabase
+          .from("words")
+          .select("*")
+          .eq("shown", false)
+          .eq("userid", userId)
+          .limit(5);
+
+        // const { rows } = await pool.query(
+        //   "SELECT * FROM words WHERE userid = $1 AND shown=true",
+        //   [userId],
+        // );
+        const { data: rows } = await supabase
+          .from("words")
+          .select("*")
+          .eq("userid", userId)
+          .eq("shown", true);
+
+        console.log("fl", fullRows.length);
 
         // if length is 0 then figure out if any left to show
         if (rows.length === 0 && fullRows.length !== 0) {
           const wordIds = fullRows.map((row) => row.id);
-          const placeholders = wordIds
-            .map((_, index) => `$${index + 1}`)
-            .join(", ");
-          const updateQuery = `UPDATE words SET shown = true WHERE id IN (${placeholders})`;
+          // const placeholders = wordIds
+          //   .map((_, index) => `$${index + 1}`)
+          //   .join(", ");
+          // const updateQuery = `UPDATE words SET shown = true WHERE id IN (${placeholders})`;
+          // await pool.query(updateQuery, wordIds);
 
-          await pool.query(updateQuery, wordIds);
+          const { error } = await supabase
+            .from("words")
+            .update({ shown: true })
+            .in("id", wordIds);
 
-          const { rows: rowsUpdated } = await pool.query(
-            "SELECT * FROM words WHERE userid = $1 AND shown=true",
-            [userId],
-          );
+          if (error) {
+            throw error;
+          }
+
+          // const { rows: rowsUpdated } = await pool.query(
+          //   "SELECT * FROM words WHERE userid = $1 AND shown=true",
+          //   [userId],
+          // );
+
+          const { data: rowsUpdated } = await supabase
+            .from("words")
+            .select("*")
+            .eq("userid", userId)
+            .eq("shown", true);
 
           res.status(200).json({
             words: rowsUpdated,
@@ -75,10 +129,10 @@ export default async function handler(req, res) {
           });
         }
 
-        res.status(200).json({
-          words: rows,
-          incorrectWords: incorrectRows === undefined ? [] : incorrectRows,
-        });
+        // res.status(200).json({
+        //   words: rows,
+        //   incorrectWords: incorrectRows === undefined ? [] : incorrectRows,
+        // });
 
         rows.length !== 0
           ? res.status(200).json({
@@ -93,10 +147,14 @@ export default async function handler(req, res) {
           .split(",")
           .map((group) => group.trim().toLowerCase());
 
-        const { rows } = await pool.query(
-          "SELECT * FROM words WHERE userid = $1",
-          [userId],
-        );
+        // const { rows } = await pool.query(
+        //   "SELECT * FROM words WHERE userid = $1",
+        //   [userId],
+        // );
+        const { data: rows } = await supabase
+          .from("words")
+          .select("*")
+          .eq("userid", userId);
 
         const filteredResults = rows.filter((row) => {
           // Split the wordGroups into an array and trim whitespace

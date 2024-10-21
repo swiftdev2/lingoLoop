@@ -1,5 +1,5 @@
 // pages/api/addWord.js
-import { Pool } from "pg";
+// import { Pool } from "pg";
 import { createClient } from "@supabase/supabase-js";
 
 import { validateToken } from "../../utils/validateToken";
@@ -13,13 +13,13 @@ export default async function handler(req, res) {
 
     const inputValues = req.body;
 
-    const pool = new Pool({
-      host: "host.docker.internal",
-      user: "postgres",
-      password: "password",
-      database: "lingoLoop",
-      port: 5432,
-    });
+    // const pool = new Pool({
+    //   host: "host.docker.internal",
+    //   user: "postgres",
+    //   password: "password",
+    //   database: "lingoLoop",
+    //   port: 5432,
+    // });
 
     const validateResponse = await validateToken(req);
 
@@ -32,37 +32,38 @@ export default async function handler(req, res) {
 
     try {
       for (const { englishWord, translation, group } of inputValues) {
-        await pool.query(
-          "INSERT INTO words (english, translation, wordgroups, created, userid) VALUES ($1, $2, $3, CURRENT_DATE, $4)",
-          [englishWord, translation, group, userId],
-        );
+        // Insert each item into the database
+        // await pool.query(
+        //   "INSERT INTO words (english, translation, wordgroups, created, userid) VALUES ($1, $2, $3, CURRENT_DATE, $4)",
+        //   [englishWord, translation, group, userId],
+        // );
 
-        // const { error } = await supabase.from("words").insert({
-        //   english: englishWord,
-        //   translation: translation,
-        //   wordgroups: group,
-        //   created: new Date(),
-        //   userid: userId,
-        // });
+        const { error } = await supabase.from("words").insert({
+          english: englishWord,
+          translation: translation,
+          wordgroups: group,
+          created: new Date(),
+          userid: userId,
+        });
 
-        // if (error) {
-        //   throw error; // Throw the error to handle it in the catch block
-        // }
+        if (error) {
+          throw error; // Throw the error to handle it in the catch block
+        }
       }
 
-      const { rows } = await pool.query(
-        "SELECT * FROM words WHERE userid = $1",
-        [userId],
-      );
+      // const { rows } = await pool.query(
+      //   "SELECT * FROM words WHERE userid = $1",
+      //   [userId],
+      // );
 
-      // const { data: rows, error: fetchError } = await supabase
-      //   .from("words")
-      //   .select("*")
-      //   .eq("userid", userId);
+      const { data: rows, error: fetchError } = await supabase
+        .from("words")
+        .select("*")
+        .eq("userid", userId);
 
-      // if (fetchError) {
-      //   throw fetchError;
-      // }
+      if (fetchError) {
+        throw fetchError;
+      }
 
       const transformedRows = rows.map((row) => ({
         ...row,

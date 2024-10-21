@@ -365,6 +365,7 @@ export const AddWordsForm = () => {
 
                   return (
                     <div
+                      key={`${index}-epicdiv`}
                       style={{
                         display: "flex",
                         gap: "1rem",
@@ -372,7 +373,7 @@ export const AddWordsForm = () => {
                       }}
                     >
                       <Input
-                        autoFocus
+                        // autoFocus
                         id={`eng-${index}`}
                         label="English Word"
                         variant="bordered"
@@ -488,6 +489,7 @@ export const AddWordsForm = () => {
               <ModalBody>
                 {Array.from({ length: numOfRows }, (_, index) => (
                   <div
+                    key={`${index}-epicdiv`}
                     style={{
                       display: "flex",
                       gap: "1rem",
@@ -495,7 +497,7 @@ export const AddWordsForm = () => {
                     }}
                   >
                     <Input
-                      autoFocus
+                      // autoFocus
                       id={`group-${index}`}
                       label="Group Name"
                       variant="bordered"

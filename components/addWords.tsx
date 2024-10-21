@@ -261,7 +261,7 @@ export const AddWordsForm = () => {
       label: "TRANSLATION",
     },
     {
-      key: "wordGroups",
+      key: "wordgroups",
       label: "WORDGROUPS",
     },
     {
@@ -389,10 +389,18 @@ export const AddWordsForm = () => {
                       <Dropdown>
                         <DropdownTrigger className="min-w-[13rem] min-h-[3.5rem]">
                           <Button className="capitalize" variant="bordered">
-                            {selectedKeys[dropdownId]
+                            {/* {selectedKeys[dropdownId]
                               ? Array.from(selectedKeys[dropdownId])
                                   .join(", ")
                                   .replaceAll("_", " ")
+                              : `Select Group `} */}
+                            {selectedKeys[dropdownId]
+                              ? typeof selectedKeys[dropdownId] === "string" &&
+                                selectedKeys[dropdownId] === "all"
+                                ? `All selected`
+                                : Array.from(selectedKeys[dropdownId] || [])
+                                    .join(", ")
+                                    .replaceAll("_", " ")
                               : `Select Group `}
                           </Button>
                         </DropdownTrigger>

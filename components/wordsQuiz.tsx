@@ -5,14 +5,16 @@ import {
   Card,
   CardBody,
   CardFooter,
+  Checkbox,
   Chip,
   Divider,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Tooltip,
 } from "@nextui-org/react";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconInfoSquareRoundedFilled } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
 
@@ -41,6 +43,8 @@ export const QuizWords = () => {
   const [getGroups, setGetGroups] = useState<string[]>([]);
   const [showingSubsetGroup, setShowingSubsetGroup] = useState(false);
   const [fetchError, setFetchError] = useState(null);
+  const [reduced, setIsReduced] = useState(true);
+  const [reducedWords, setIsReducedWords] = useState<wordsInterface[]>([]);
   const [getIncorrectWords, setIncorrectGetWords] = useState<
     incorrectWordsInterface[]
   >([]);
@@ -50,9 +54,6 @@ export const QuizWords = () => {
   const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set());
 
   const fetchWithErrorHandling = async (url: string) => {
-    // const response = await fetch(url);
-    // const response = await fetch(url);
-
     const response = await fetch(url, {
       headers: {
         "Content-Type": "application/json",
@@ -136,7 +137,7 @@ export const QuizWords = () => {
     setStreak((prev) => prev + 1);
     setShowAnswer(false);
 
-    if (!isWordsInterface(currentWord!)) {
+    if (!isWordsInterface(currentWord!) && showingSubsetGroup === false) {
       // increment incorrect word list
       const countPlus = currentWord!.count + 1;
       const response = await fetch(
@@ -151,6 +152,24 @@ export const QuizWords = () => {
       const data = await response.json();
 
       setIncorrectGetWords(data);
+    } else if (
+      !isWordsInterface(currentWord!) &&
+      reduced === true &&
+      showingSubsetGroup === true
+    ) {
+      const countPlus = currentWord!.count + 1;
+
+      if (countPlus === 3) {
+        setIncorrectGetWords((prevWords) =>
+          prevWords.filter((word) => word.id !== currentWord!.id),
+        );
+      } else {
+        setIncorrectGetWords((prevWords) =>
+          prevWords.map((word) =>
+            word.id === currentWord!.id ? { ...word, count: countPlus } : word,
+          ),
+        );
+      }
     }
     selectWord();
   };
@@ -192,6 +211,20 @@ export const QuizWords = () => {
 
         setIncorrectGetWords(data);
       }
+    } else if (reduced === true) {
+      const constructedIncorrectWord: incorrectWordsInterface = {
+        id: currentWord!.id,
+        english: currentWord!.english,
+        translation: currentWord!.translation,
+        wordGroups: currentWord!.wordGroups,
+        created: currentWord!.created,
+        count: 0,
+      };
+
+      setIncorrectGetWords((prevWords) => [
+        ...prevWords,
+        constructedIncorrectWord,
+      ]);
     }
     selectWord();
   };
@@ -217,12 +250,21 @@ export const QuizWords = () => {
         setGetWords(data);
       }
 
+      if (
+        streak > 14 &&
+        streak % 15 == 0 &&
+        reduced === true &&
+        showingSubsetGroup === true
+      ) {
+        incrementReducedWords(getWords, reducedWords);
+      }
+
       const chanceOfFour = Math.floor(Math.random() * 4);
 
       // only pick from incorrect word list if there is anything in that list and not in subset group
       if (
         getIncorrectWords.length > 0 &&
-        showingSubsetGroup === false &&
+        (showingSubsetGroup === false || reduced === true) &&
         chanceOfFour === 1
       ) {
         const randomIndex = Math.floor(
@@ -244,7 +286,7 @@ export const QuizWords = () => {
     }
   }
 
-  async function updateWords() {
+  async function updateWords(reduced: boolean) {
     const dropdownValues = selectedKeys;
     const group = dropdownValues ? Array.from(dropdownValues).join(", ") : "";
 
@@ -259,8 +301,19 @@ export const QuizWords = () => {
       return;
     }
 
-    setGetWords(data["words"]);
-    setIncorrectGetWords(data["incorrectWords"]);
+    if (!group.includes("All") && reduced === true) {
+      setIsReducedWords(data["words"]);
+      setGetWords([]);
+      incrementReducedWords([], data["words"]);
+      setIncorrectGetWords([]);
+    } else if (group.includes("All")) {
+      setGetWords(data["words"]);
+      setIsReducedWords([]);
+      setIncorrectGetWords(data["incorrectWords"]);
+    } else {
+      setGetWords(data["words"]);
+      setIsReducedWords([]);
+    }
   }
 
   function isWordsInterface(
@@ -268,6 +321,25 @@ export const QuizWords = () => {
   ): word is wordsInterface {
     return (word as wordsInterface).shown !== undefined;
   }
+
+  const incrementReducedWords = (
+    getWords: wordsInterface[],
+    reducedWords: wordsInterface[],
+  ) => {
+    if (getWords.length !== reducedWords.length) {
+      if (getWords.length + 5 < reducedWords.length) {
+        for (let i = getWords.length; i <= getWords.length + 5; i++) {
+          setGetWords((prevWords) => [...prevWords, reducedWords[i]]);
+        }
+      } else {
+        for (let i = getWords.length; i < reducedWords.length; i++) {
+          setGetWords((prevWords) => [...prevWords, reducedWords[i]]);
+        }
+      }
+    }
+  };
+
+  // console.log("getWords", getWords);
 
   return (
     <>
@@ -314,11 +386,50 @@ export const QuizWords = () => {
                   color="success"
                   style={{ marginLeft: "0.5rem" }}
                   variant="flat"
-                  onClick={updateWords}
+                  onClick={() => {
+                    updateWords(reduced);
+                  }}
                 >
                   <IconCheck />
                 </Button>
               </div>
+              {showingSubsetGroup && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginTop: "0.5rem",
+                  }}
+                >
+                  <Checkbox
+                    color="success"
+                    isSelected={reduced}
+                    onValueChange={(value) => {
+                      setIsReduced(value);
+                      updateWords(value);
+                    }}
+                  >
+                    Use smart algorithm
+                  </Checkbox>
+                  <Tooltip
+                    content={
+                      <div className="px-1 py-2">
+                        <div className="text-tiny">
+                          Start with small number of words first, gradually add
+                          more
+                        </div>
+                        <div className="text-tiny">
+                          Show words you get wrong more often
+                        </div>
+                      </div>
+                    }
+                  >
+                    <IconInfoSquareRoundedFilled
+                      style={{ color: "#17c964", marginLeft: "0.3rem" }}
+                    />
+                  </Tooltip>
+                </div>
+              )}
             </div>
             <div
               style={{
@@ -333,9 +444,12 @@ export const QuizWords = () => {
               <Chip color="success" style={{ marginBottom: "0.5rem" }}>
                 Words testing on: {getWords.length}
               </Chip>
-              <Chip color="secondary">
-                Incorrect words: {getIncorrectWords.length}
-              </Chip>
+              {showingSubsetGroup === false ||
+                (reduced && (
+                  <Chip color="secondary">
+                    Incorrect words: {getIncorrectWords.length}
+                  </Chip>
+                ))}
             </div>
           </div>
           {currentWord && (

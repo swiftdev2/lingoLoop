@@ -17,7 +17,7 @@ import {
 import { IconCheck, IconInfoSquareRoundedFilled } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import Cookies from "js-cookie";
-import "./epicCss.css";
+// import "./epicCss.css";
 
 interface wordsInterface {
   created: string;

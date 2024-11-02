@@ -178,7 +178,7 @@ export const QuizWords = () => {
     setStreak(0);
     setShowAnswer(false);
     if (showingSubsetGroup === false) {
-      if (isWordsInterface(currentWord!)) {
+      if (incorrectWordInList()) {
         // add to incorrect word list
         // const response = await fetch(
         //   `/api/addIncorrectWord?id=${currentWord.id}`,
@@ -212,21 +212,44 @@ export const QuizWords = () => {
         setIncorrectGetWords(data);
       }
     } else if (reduced === true) {
-      const constructedIncorrectWord: incorrectWordsInterface = {
-        id: currentWord!.id,
-        english: currentWord!.english,
-        translation: currentWord!.translation,
-        wordGroups: currentWord!.wordGroups,
-        created: currentWord!.created,
-        count: 0,
-      };
+      if (incorrectWordInList()) {
+        // add incorrect word
+        const constructedIncorrectWord: incorrectWordsInterface = {
+          id: currentWord!.id,
+          english: currentWord!.english,
+          translation: currentWord!.translation,
+          wordGroups: currentWord!.wordGroups,
+          created: currentWord!.created,
+          count: 0,
+        };
 
-      setIncorrectGetWords((prevWords) => [
-        ...prevWords,
-        constructedIncorrectWord,
-      ]);
+        setIncorrectGetWords((prevWords) => [
+          ...prevWords,
+          constructedIncorrectWord,
+        ]);
+      } else {
+        // set count to 0
+        setIncorrectGetWords((prevWords) =>
+          prevWords.map(
+            (word) =>
+              word.id === currentWord!.id ? { ...word, count: 0 } : word, // Update count to 0 for the matching item
+          ),
+        );
+      }
     }
     selectWord();
+  };
+
+  const incorrectWordInList = () => {
+    let found = false;
+
+    getIncorrectWords.map((word) => {
+      if (word.id === currentWord!.id) {
+        found = true;
+      }
+    });
+
+    return found;
   };
 
   const selectedValue = useMemo(
@@ -302,10 +325,12 @@ export const QuizWords = () => {
     }
 
     if (!group.includes("All") && reduced === true) {
-      setIsReducedWords(data["words"]);
+      const shuffledWords = shuffleArray(data["words"]);
+
+      setIsReducedWords(shuffledWords);
       setGetWords([]);
-      incrementReducedWords([], data["words"]);
       setIncorrectGetWords([]);
+      incrementReducedWords([], shuffledWords);
     } else if (group.includes("All")) {
       setGetWords(data["words"]);
       setIsReducedWords([]);
@@ -339,8 +364,25 @@ export const QuizWords = () => {
     }
   };
 
-  // console.log("getWords", getWords);
-  console.log("showingSubsetGroup", showingSubsetGroup);
+  const shuffleArray = (array: wordsInterface[]) => {
+    const shuffledArray = [...array]; // Create a copy of the array to avoid mutating the original
+
+    for (let i = shuffledArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); // Random index from 0 to i
+
+      // Swap elements at indices i and j
+      [shuffledArray[i], shuffledArray[j]] = [
+        shuffledArray[j],
+        shuffledArray[i],
+      ];
+    }
+
+    return shuffledArray; // Return the shuffled array
+  };
+
+  console.log("getWords", getWords);
+  // console.log("showingSubsetGroup", showingSubsetGroup);
+  console.log("getIncorrectWords", getIncorrectWords);
 
   return (
     <>

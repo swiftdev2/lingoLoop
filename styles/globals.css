@@ -56,21 +56,33 @@
     min-width: 10.5vw;
 }
 
+.chips-group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
 
 /* Responsive design for smaller screens */
 @media (max-width: 768px) {
     .standard-chip {
         margin-bottom: 0.4rem;
-        min-width: 80vw;
+        min-width: 0vw;
+        margin-right: 0.2rem;
     }
 
     .bottom-chip {
-        min-width: 80vw;
+        min-width: 0vw;
+    }
+
+    .chips-group {
+        flex-direction: row;
+        padding-top: 1rem;
     }
 
     .card-container {
       flex-direction: column; /* Stack cards vertically */
       align-items: center; /* Center cards horizontally */
+      padding-top: 1rem;
     }
 
     .card {

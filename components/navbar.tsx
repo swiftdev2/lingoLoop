@@ -20,7 +20,7 @@ import { IconLogout } from "@tabler/icons-react";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import { GithubIcon, SearchIcon, Logo } from "@/components/icons";
+import { SearchIcon, Logo } from "@/components/icons";
 
 export const Navbar = () => {
   const [name, setName] = useState<String | undefined>();
@@ -91,7 +91,7 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarContent
-        className="hidden sm:flex basis-1/5 sm:basis-full"
+        className="flex sm:flex basis-1/5 sm:basis-full"
         justify="end"
       >
         {/* <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem> */}
@@ -109,7 +109,7 @@ export const Navbar = () => {
         </NavbarItem> */}
         {name && (
           <>
-            <NavbarItem className="hidden md:flex">
+            <NavbarItem className="flex md:flex">
               <h1>Signed in: {name}</h1>
             </NavbarItem>
             <NavbarItem className="hidden md:flex">
@@ -128,9 +128,9 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-        <Link isExternal href={siteConfig.links.github}>
+        {/* <Link isExternal href={siteConfig.links.github}>
           <GithubIcon className="text-default-500" />
-        </Link>
+        </Link> */}
         <ThemeSwitch />
         <NavbarMenuToggle />
       </NavbarContent>
@@ -142,14 +142,17 @@ export const Navbar = () => {
             <NavbarMenuItem key={`${item}-${index}`}>
               <Link
                 color={
-                  index === 2
-                    ? "primary"
-                    : index === siteConfig.navMenuItems.length - 1
-                      ? "danger"
-                      : "foreground"
+                  index === siteConfig.navMenuItems.length - 1
+                    ? "danger"
+                    : "foreground"
                 }
-                href="#"
+                href={item.href}
                 size="lg"
+                onClick={
+                  index === siteConfig.navMenuItems.length - 1
+                    ? handleLogout
+                    : undefined
+                }
               >
                 {item.label}
               </Link>

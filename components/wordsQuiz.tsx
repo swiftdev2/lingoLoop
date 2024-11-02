@@ -427,13 +427,7 @@ export const QuizWords = () => {
                 </div>
               )}
             </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-              }}
-            >
+            <div className="chips-group">
               <Chip className="standard-chip" color="warning">
                 Streak: {streak}
               </Chip>
@@ -448,29 +442,38 @@ export const QuizWords = () => {
             </div>
           </div>
           {currentWord && (
-            <Card
-              isPressable
-              className="card question-card"
-              radius="lg"
-              onPress={() =>
-                setShowAnswer((prev) => (prev == false ? true : false))
-              }
-            >
-              {!showAnswer ? (
-                <CardBody className="card-body">{currentWord.english}</CardBody>
-              ) : (
-                <CardBody className="card-body">
-                  {currentWord.translation}
-                </CardBody>
-              )}
+            <>
+              <Divider className="block sm:hidden" />
+              <h1 className="block sm:hidden">Question:</h1>
+              <Card
+                isPressable
+                className="card question-card"
+                radius="lg"
+                onPress={() =>
+                  setShowAnswer((prev) => (prev == false ? true : false))
+                }
+              >
+                {!showAnswer ? (
+                  <CardBody className="card-body">
+                    {currentWord.english}
+                  </CardBody>
+                ) : (
+                  <CardBody className="card-body">
+                    {currentWord.translation}
+                  </CardBody>
+                )}
 
-              <Divider />
-              <CardFooter>
-                {!showAnswer ? <>English</> : <>Arabic</>}
-              </CardFooter>
-            </Card>
+                <Divider />
+                <CardFooter>
+                  {!showAnswer ? <>English</> : <>Arabic</>}
+                </CardFooter>
+              </Card>
+            </>
           )}
           <div className="card-container">
+            <h1 className="block sm:hidden">
+              Did you get the translation right?:
+            </h1>
             <Card
               isPressable
               className="card correct-card"

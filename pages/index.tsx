@@ -60,7 +60,7 @@ export default function IndexPage() {
 
   return (
     <DefaultLayout>
-      <section className="flex flex-col items-center justify-center gap-4 py-1 md:py-10">
+      <section className="flex flex-col items-center justify-center gap-4 md:py-10">
         <GoogleOAuthProvider clientId="502508006609-fcg4pvogi9svglrt1p1s1euuuk6e6p6c.apps.googleusercontent.com">
           {isAuthenticated ? (
             <QuizWords />

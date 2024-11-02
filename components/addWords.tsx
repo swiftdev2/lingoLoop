@@ -43,6 +43,7 @@ export const AddWordsForm = () => {
   const [getGroups, setGetGroups] = useState<string[]>([]);
   const [numOfRows, setNumOfRows] = useState<number>(1);
   const [incompleteForm, setIncompleteForm] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
   const {
     isOpen: isOpenWords,
     onOpen: onOpenWords,
@@ -56,6 +57,20 @@ export const AddWordsForm = () => {
   const [selectedKeys, setSelectedKeys] = useState<{
     [key: string]: Iterable<string> | "all" | undefined;
   }>({});
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+
+    // Add event listener for window resize
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   const fetchData = async () => {
     // const responseWords = await fetch("/api/getWords?fullList=true&groups=all");
@@ -313,22 +328,21 @@ export const AddWordsForm = () => {
 
   return (
     <>
-      <Table
-        aria-label="Example table with dynamic content"
-        topContent={topContent}
-      >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <TableColumn key={column.key}>{column.label}</TableColumn>
-          )}
-          {/* <TableColumn key="actions">Actions</TableColumn> */}
-        </TableHeader>
-        <TableBody items={getWords}>
-          {(item) => (
-            <TableRow key={item.key}>
-              {(columnKey) => (
-                <TableCell key={`${item.key}-${columnKey}`}>
-                  {columnKey === "actions" ? (
+      {isMobile ? (
+        <div>
+          {getWords.map((item) => (
+            <div
+              key={item.key}
+              style={{
+                marginBottom: "1rem",
+                border: "1px solid #ccc",
+                padding: "1rem",
+              }}
+            >
+              {columns.map((column) => (
+                <div key={column.key}>
+                  <strong>{column.label}: </strong>
+                  {column.key === "actions" ? (
                     <Button
                       isIconOnly
                       color="danger"
@@ -338,15 +352,48 @@ export const AddWordsForm = () => {
                       <IconTrash style={{ maxHeight: "1.5rem" }} />
                     </Button>
                   ) : (
-                    getKeyValue(item, columnKey) // Display static value
+                    getKeyValue(item, column.key)
                   )}
-                </TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <Table
+          aria-label="Table outlining all words in personal dictionary"
+          topContent={topContent}
+        >
+          <TableHeader columns={columns}>
+            {(column) => (
+              <TableColumn key={column.key}>{column.label}</TableColumn>
+            )}
+            {/* <TableColumn key="actions">Actions</TableColumn> */}
+          </TableHeader>
+          <TableBody items={getWords}>
+            {(item) => (
+              <TableRow key={item.key}>
+                {(columnKey) => (
+                  <TableCell key={`${item.key}-${columnKey}`}>
+                    {columnKey === "actions" ? (
+                      <Button
+                        isIconOnly
+                        color="danger"
+                        size="sm"
+                        onPress={() => handleDeleteWord(item.id, item.english)}
+                      >
+                        <IconTrash style={{ maxHeight: "1.5rem" }} />
+                      </Button>
+                    ) : (
+                      getKeyValue(item, columnKey) // Display static value
+                    )}
+                  </TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      )}
       <Modal
         isDismissable={false}
         isOpen={isOpenWords}

@@ -185,7 +185,7 @@ export const QuizWords = () => {
         // );
 
         const response = await fetch(
-          `/api/addIncorrectWord?id=${currentWord.id}`,
+          `/api/addIncorrectWord?id=${currentWord!.id}`,
           {
             headers: {
               "Content-Type": "application/json",
@@ -212,7 +212,8 @@ export const QuizWords = () => {
         setIncorrectGetWords(data);
       }
     } else if (reduced === true) {
-      if (incorrectWordInList()) {
+      if (!incorrectWordInList()) {
+        console.log("wow1");
         // add incorrect word
         const constructedIncorrectWord: incorrectWordsInterface = {
           id: currentWord!.id,
@@ -228,6 +229,7 @@ export const QuizWords = () => {
           constructedIncorrectWord,
         ]);
       } else {
+        console.log("wow2");
         // set count to 0
         setIncorrectGetWords((prevWords) =>
           prevWords.map(
@@ -282,9 +284,12 @@ export const QuizWords = () => {
         incrementReducedWords(getWords, reducedWords);
       }
 
-      const chanceOfFour = Math.floor(Math.random() * 4);
+      // 50% chance of showing incorrect word is > 4 in list
+      // 25% chance of showing incorrect word is < 4 in list
+      const multiplier = getIncorrectWords.length > 4 ? 2 : 4;
+      const chanceOfFour = Math.floor(Math.random() * multiplier);
 
-      // only pick from incorrect word list if there is anything in that list and not in subset group
+      // only pick from incorrect word list if there is anything in that list or using smart algorithm in subset group
       if (
         getIncorrectWords.length > 0 &&
         (showingSubsetGroup === false || reduced === true) &&
@@ -297,17 +302,35 @@ export const QuizWords = () => {
 
         setCurrentWord(selectedWord);
       } else {
-        const randomIndex = Math.floor(Math.random() * getWords.length);
+        // const randomIndex = Math.floor(Math.random() * getWords.length);
+        // Non biased random when smart algorithm off in subset
+        const randomIndex =
+          reduced === false && showingSubsetGroup === true
+            ? Math.floor(Math.random() * getWords.length)
+            : getBiasedRandomIndex();
         const selectedWord = getWords[randomIndex];
 
         setCurrentWord(selectedWord);
         console.log("selectedWord", selectedWord);
       }
-      const chanceOfTwo = Math.floor(Math.random() * 2);
 
-      setShowAnswer(chanceOfTwo == 1 ? true : false);
+      // show arabic word as Q 33% of time
+      const chanceOfThree = Math.floor(Math.random() * 3);
+
+      setShowAnswer(chanceOfThree == 1 ? true : false);
     }
   }
+
+  // Function to generate a biased random index
+  const getBiasedRandomIndex = (): number => {
+    // < 1 = bias towards end, > 1 = bias towards start
+    const exponent = 0.7;
+    const randomValue = Math.random(); // Generates a number between 0 and 1
+    const biasedValue = Math.pow(randomValue, exponent); // Skews the value to bias towards 1
+
+    // Convert the biased value to an index between 0 and (length - 1)
+    return Math.floor(biasedValue * getWords.length);
+  };
 
   async function updateWords(reduced: boolean) {
     const dropdownValues = selectedKeys;
@@ -383,6 +406,7 @@ export const QuizWords = () => {
   console.log("getWords", getWords);
   // console.log("showingSubsetGroup", showingSubsetGroup);
   console.log("getIncorrectWords", getIncorrectWords);
+  console.log("reducedWords", reducedWords);
 
   return (
     <>

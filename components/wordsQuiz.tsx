@@ -117,7 +117,7 @@ export const QuizWords = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, []);
+  }, [currentWord]);
 
   const handleKeyPress = (event: KeyboardEvent) => {
     if (event.key === "1") {
@@ -403,10 +403,10 @@ export const QuizWords = () => {
     return shuffledArray; // Return the shuffled array
   };
 
-  console.log("getWords", getWords);
+  // console.log("getWords", getWords);
   // console.log("showingSubsetGroup", showingSubsetGroup);
-  console.log("getIncorrectWords", getIncorrectWords);
-  console.log("reducedWords", reducedWords);
+  // console.log("getIncorrectWords", getIncorrectWords);
+  // console.log("currentWord", currentWord);
 
   return (
     <>

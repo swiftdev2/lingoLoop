@@ -125,6 +125,7 @@ export const Navbar = () => {
             </NavbarItem>
           </>
         )}
+        <ThemeSwitch />
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
@@ -136,7 +137,7 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarMenu>
-        {searchInput}
+        {/* {searchInput} */}
         <div className="mx-4 mt-2 flex flex-col gap-2">
           {siteConfig.navMenuItems.map((item, index) => (
             <NavbarMenuItem key={`${item}-${index}`}>
@@ -158,6 +159,9 @@ export const Navbar = () => {
               </Link>
             </NavbarMenuItem>
           ))}
+          <NavbarMenuItem key={`DarkModeToggle`}>
+            <ThemeSwitch text={true} />
+          </NavbarMenuItem>
         </div>
       </NavbarMenu>
     </NextUINavbar>

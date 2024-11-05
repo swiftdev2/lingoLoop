@@ -555,6 +555,7 @@ export const QuizWords = () => {
               isPressable
               className="card correct-card"
               radius="lg"
+              style={{ maxHeight: "18vh", minHeight: "18vh" }}
               onPress={handleCorrectAnswer}
             >
               <CardBody className="card-body">Correct</CardBody>
@@ -564,6 +565,7 @@ export const QuizWords = () => {
               isPressable
               className="card wrong-card"
               radius="lg"
+              style={{ maxHeight: "18vh", minHeight: "18vh" }}
               onPress={handleWrongAnswer}
             >
               <CardBody className="card-body">Wrong</CardBody>

@@ -43,7 +43,7 @@ export const AddWordsForm = () => {
   const [getGroups, setGetGroups] = useState<string[]>([]);
   const [numOfRows, setNumOfRows] = useState<number>(1);
   const [incompleteForm, setIncompleteForm] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const [isMobile, setIsMobile] = useState(false);
   const {
     isOpen: isOpenWords,
     onOpen: onOpenWords,

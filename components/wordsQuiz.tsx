@@ -120,7 +120,7 @@ export const QuizWords = () => {
   }, [currentWord]);
 
   const handleKeyPress = (event: KeyboardEvent) => {
-    if (event.key === "1") {
+    if (event.key === "1" || event.key === " ") {
       setShowAnswer((prev) => (prev == false ? true : false));
     }
 
@@ -213,7 +213,6 @@ export const QuizWords = () => {
       }
     } else if (reduced === true) {
       if (!incorrectWordInList()) {
-        console.log("wow1");
         // add incorrect word
         const constructedIncorrectWord: incorrectWordsInterface = {
           id: currentWord!.id,
@@ -520,11 +519,23 @@ export const QuizWords = () => {
                 }
               >
                 {!showAnswer ? (
-                  <CardBody className="card-body">
+                  <CardBody
+                    style={{
+                      fontSize:
+                        currentWord.english.length > 10 ? "1.4rem" : "2rem",
+                      alignItems: "center",
+                    }}
+                  >
                     {currentWord.english}
                   </CardBody>
                 ) : (
-                  <CardBody className="card-body">
+                  <CardBody
+                    style={{
+                      fontSize:
+                        currentWord.english.length > 10 ? "1.4rem" : "2rem",
+                      alignItems: "center",
+                    }}
+                  >
                     {currentWord.translation}
                   </CardBody>
                 )}

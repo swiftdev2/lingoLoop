@@ -20,6 +20,8 @@ import {
   DropdownItem,
   Dropdown,
   Tooltip,
+  Accordion,
+  AccordionItem,
 } from "@nextui-org/react";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import React from "react";
@@ -325,39 +327,46 @@ export const AddWordsForm = () => {
 
   console.log("getWords", getWords);
   console.log("getGroups", getGroups);
+  console.log("isMobile", isMobile);
 
   return (
     <>
       {isMobile ? (
         <div>
-          {getWords.map((item) => (
-            <div
-              key={item.key}
-              style={{
-                marginBottom: "1rem",
-                border: "1px solid #ccc",
-                padding: "1rem",
-              }}
+          <div className="flex justify-between mb-4">
+            <Button
+              className="bg-foreground text-background"
+              endContent={<IconPlus />}
+              size="sm"
+              onPress={() => handleOpenNewWord()}
             >
-              {columns.map((column) => (
-                <div key={column.key}>
-                  <strong>{column.label}: </strong>
-                  {column.key === "actions" ? (
-                    <Button
-                      isIconOnly
-                      color="danger"
-                      size="sm"
-                      onPress={() => handleDeleteWord(item.id, item.english)}
-                    >
-                      <IconTrash style={{ maxHeight: "1.5rem" }} />
-                    </Button>
-                  ) : (
-                    getKeyValue(item, column.key)
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
+              Add New Word
+            </Button>
+            <Button
+              className="bg-foreground text-background"
+              endContent={<IconPlus />}
+              size="sm"
+              onPress={() => handleOpenNewGroup()}
+            >
+              Add New Group
+            </Button>
+          </div>
+
+          <Accordion variant="splitted">
+            {getWords.map((item, index) => (
+              <AccordionItem
+                key={`${index}`}
+                aria-label="Accordion 1"
+                title={getKeyValue(item, "english")}
+              >
+                Translation: {getKeyValue(item, "translation")}
+                <br />
+                Group: {getKeyValue(item, "wordgroups")}
+                <br />
+                In word list: {getKeyValue(item, "shown")}
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
       ) : (
         <Table
@@ -435,13 +444,8 @@ export const AddWordsForm = () => {
                       />
 
                       <Dropdown>
-                        <DropdownTrigger className="min-w-[13rem] min-h-[3.5rem]">
+                        <DropdownTrigger className="min-h-[3.5rem] sm:min-w-[13rem]">
                           <Button className="capitalize" variant="bordered">
-                            {/* {selectedKeys[dropdownId]
-                              ? Array.from(selectedKeys[dropdownId])
-                                  .join(", ")
-                                  .replaceAll("_", " ")
-                              : `Select Group `} */}
                             {selectedKeys[dropdownId]
                               ? typeof selectedKeys[dropdownId] === "string" &&
                                 selectedKeys[dropdownId] === "all"
@@ -449,7 +453,9 @@ export const AddWordsForm = () => {
                                 : Array.from(selectedKeys[dropdownId] || [])
                                     .join(", ")
                                     .replaceAll("_", " ")
-                              : `Select Group `}
+                              : isMobile
+                                ? `Group `
+                                : `Select Group `}
                           </Button>
                         </DropdownTrigger>
                         <DropdownMenu

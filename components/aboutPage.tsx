@@ -38,9 +38,9 @@ export default function About() {
           <p>
             Use the <strong>Add</strong> page to enter new words into your
             personalized dictionary. Enter the English word, its translation,
-            and assign it to a group (e.g., 'Colors' or 'Food') if desired. You
-            can also create custom groups to organize your vocabulary for
-            targeted practice.
+            and assign it to a group (e.g., &quot;Colors&quot; or
+            &quot;Food&quot;) if desired. You can also create custom groups to
+            organize your vocabulary for targeted practice.
           </p>
         </CardBody>
       </Card>
@@ -69,8 +69,8 @@ export default function About() {
           <p>
             Lingo Loop tracks your progress. Words answered incorrectly are
             added to an <strong>Incorrect Words List</strong> and will appear
-            more frequently until you've correctly answered them correct 3 times
-            in a row.
+            more frequently until you&apos;ve correctly answered them correct 3
+            times in a row.
           </p>
         </CardBody>
       </Card>
@@ -91,8 +91,8 @@ export default function About() {
             from your Dictionary.
           </p>
           <p>
-            You can also test within specific groups (e.g., 'Colors'). Here, you
-            can use the Smart Algorithm.
+            You can also test within specific groups (e.g., &quot;Colors&quot;).
+            Here, you can use the Smart Algorithm.
           </p>
           <ul>
             <li>

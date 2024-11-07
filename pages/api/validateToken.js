@@ -44,8 +44,6 @@ export default async function validateToken(req, res) {
     //   [userId],
     // );
 
-    console.log("www");
-
     const { data: existingUser } = await supabase
       .from("users")
       .select("*")

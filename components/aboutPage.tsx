@@ -38,7 +38,7 @@ export default function About() {
           <p>
             Use the <strong>Add</strong> page to enter new words into your
             personalized dictionary. Enter the English word, its translation,
-            and assign it to a group (e.g., "Colors" or "Food") if desired. You
+            and assign it to a group (e.g., 'Colors' or 'Food') if desired. You
             can also create custom groups to organize your vocabulary for
             targeted practice.
           </p>
@@ -91,7 +91,7 @@ export default function About() {
             from your Dictionary.
           </p>
           <p>
-            You can also test within specific groups (e.g., "Colors"). Here, you
+            You can also test within specific groups (e.g., 'Colors'). Here, you
             can use the Smart Algorithm.
           </p>
           <ul>

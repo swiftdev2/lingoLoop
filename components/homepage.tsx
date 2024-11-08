@@ -150,8 +150,8 @@ export const HomePage = ({
             color: "var(--text-secondary-color, #555)",
           }}
         >
-          Click "Sign in with Google" above to join Lingo Loop and start
-          improving your language skills today!
+          Click &quot;Sign in with Google&quot; above to join Lingo Loop and
+          start improving your language skills today!
         </p>
       </div>
     </div>

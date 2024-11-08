@@ -108,3 +108,18 @@
     }
 
 }
+
+:root {
+    --text-secondary-color: #555; /* Light mode secondary text color */
+    --heading-color-light: #11181c; /* Light mode heading color */
+    --heading-color-dark: #11181c; /* Dark mode heading color */
+  }
+  
+  [data-theme="dark"] {
+    --text-secondary-color: #ccc; /* Dark mode secondary text color */
+    --heading-color: var(--heading-color-dark);
+  }
+  
+  [data-theme="light"] {
+    --heading-color: var(--heading-color-light);
+  }

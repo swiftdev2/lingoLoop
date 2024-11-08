@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import DefaultLayout from "@/layouts/default";
 import { SignIn } from "@/components/signin";
 import { QuizWords } from "@/components/wordsQuiz";
+import { HomePage } from "@/components/homepage";
 
 export default function IndexPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -52,8 +53,6 @@ export default function IndexPage() {
     }
   };
 
-  console.log("isAuthenticated", isAuthenticated);
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -70,7 +69,8 @@ export default function IndexPage() {
               <SignIn onLoginSuccess={handleLoginSuccess} />
             </>
           ) : (
-            <SignIn onLoginSuccess={handleLoginSuccess} />
+            // <SignIn onLoginSuccess={handleLoginSuccess} />
+            <HomePage onLoginSuccess={handleLoginSuccess} />
           )}
         </GoogleOAuthProvider>
       </section>

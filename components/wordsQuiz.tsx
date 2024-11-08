@@ -228,7 +228,6 @@ export const QuizWords = () => {
           constructedIncorrectWord,
         ]);
       } else {
-        console.log("wow2");
         // set count to 0
         setIncorrectGetWords((prevWords) =>
           prevWords.map(
@@ -310,7 +309,6 @@ export const QuizWords = () => {
         const selectedWord = getWords[randomIndex];
 
         setCurrentWord(selectedWord);
-        console.log("selectedWord", selectedWord);
       }
 
       // show arabic word as Q 33% of time

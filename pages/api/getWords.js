@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-
 import { Pool } from "pg";
 import { createClient } from "@supabase/supabase-js";
 
@@ -84,29 +81,29 @@ export default async function handler(req, res) {
         //   "SELECT * FROM words WHERE shown = false AND userid = $1 LIMIT 5",
         //   [userId],
         // );
-        // const { data: fullRows } = await supabase
-        //   .from("words")
-        //   .select("*")
-        //   .eq("shown", false)
-        //   .eq("userid", userId)
-        //   .limit(5);
+        const { data: fullRows } = await supabase
+          .from("words")
+          .select("*")
+          .eq("shown", false)
+          .eq("userid", userId)
+          .limit(5);
 
-        const data = fs.readFileSync(
-          path.join(process.cwd(), "utils", "mockWords.json"),
-          "utf8",
-        );
-        const fullRows = JSON.parse(data);
+        // const data = fs.readFileSync(
+        //   path.join(process.cwd(), "utils", "mockWords.json"),
+        //   "utf8",
+        // );
+        // const fullRows = JSON.parse(data);
 
         // const { rows } = await pool.query(
         //   "SELECT * FROM words WHERE userid = $1 AND shown=true",
         //   [userId],
         // );
-        // const { data: rows } = await supabase
-        //   .from("words")
-        //   .select("*")
-        //   .eq("userid", userId)
-        //   .eq("shown", true);
-        const rows = JSON.parse(data);
+        const { data: rows } = await supabase
+          .from("words")
+          .select("*")
+          .eq("userid", userId)
+          .eq("shown", true);
+        // const rows = JSON.parse(data);
 
         // if length is 0 then figure out if any left to show
         if (rows.length === 0 && fullRows.length !== 0) {

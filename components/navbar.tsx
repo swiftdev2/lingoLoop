@@ -136,34 +136,36 @@ export const Navbar = () => {
         <NavbarMenuToggle />
       </NavbarContent>
 
-      <NavbarMenu>
-        {/* {searchInput} */}
-        <div className="mx-4 mt-2 flex flex-col gap-2">
-          {siteConfig.navMenuItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
-                color={
-                  index === siteConfig.navMenuItems.length - 1
-                    ? "danger"
-                    : "foreground"
-                }
-                href={item.href}
-                size="lg"
-                onClick={
-                  index === siteConfig.navMenuItems.length - 1
-                    ? handleLogout
-                    : undefined
-                }
-              >
-                {item.label}
-              </Link>
+      {name && (
+        <NavbarMenu>
+          {/* {searchInput} */}
+          <div className="mx-4 mt-2 flex flex-col gap-2">
+            {siteConfig.navMenuItems.map((item, index) => (
+              <NavbarMenuItem key={`${item}-${index}`}>
+                <Link
+                  color={
+                    index === siteConfig.navMenuItems.length - 1
+                      ? "danger"
+                      : "foreground"
+                  }
+                  href={item.href}
+                  size="lg"
+                  onClick={
+                    index === siteConfig.navMenuItems.length - 1
+                      ? handleLogout
+                      : undefined
+                  }
+                >
+                  {item.label}
+                </Link>
+              </NavbarMenuItem>
+            ))}
+            <NavbarMenuItem key={`DarkModeToggle`}>
+              <ThemeSwitch text={true} />
             </NavbarMenuItem>
-          ))}
-          <NavbarMenuItem key={`DarkModeToggle`}>
-            <ThemeSwitch text={true} />
-          </NavbarMenuItem>
-        </div>
-      </NavbarMenu>
+          </div>
+        </NavbarMenu>
+      )}
     </NextUINavbar>
   );
 };
